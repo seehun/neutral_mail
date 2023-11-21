@@ -1,6 +1,7 @@
 
 from tkinter import *
 import smtplib
+import re
 
 # Main Screen Init
 master = Tk()
@@ -38,6 +39,12 @@ def reset():
     bodyEntry.delete(0, 'end')
 
 
+def extract_previous_sentence(event):
+    text = bodyEntry.get("1.0", "end-1c")
+    sentences = re.split(r'[.,?!]|\n', text)
+    print(sentences)
+
+
 # Labels
 Label(master, text="Custom Email App", font=(
     'Calibri', 15)).grid(row=0, sticky=N)
@@ -73,6 +80,7 @@ subjectEntry.grid(row=5, column=0)
 # bodyEntry = Entry(master, textvariable=temp_body)
 bodyEntry = Text(master, wrap=WORD, height=10, width=20)
 bodyEntry.grid(row=6, column=0)
+bodyEntry.bind("<KeyRelease>", extract_previous_sentence)
 
 # Buttons
 Button(master, text="Send", command=send).grid(
