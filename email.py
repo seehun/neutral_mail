@@ -10,6 +10,58 @@ master.title = 'Custom Email App'
 # Functions
 
 
+def apply_background_color(state):
+    if state == 'positive':
+        return 'olive'
+    elif state == 'negative':
+        return 'coral'
+    else:
+        return 'white'
+
+
+def update_background_color():
+    current_color = bodyEntry.cget('bg')
+    target_color = apply_background_color(state_var.get())
+
+    current_rgb = master.winfo_rgb(current_color)
+    target_rgb = master.winfo_rgb(target_color)
+
+    step = 20
+    new_rgb = tuple(
+        int(current + step * ((target - current) / 255)) for current, target in zip(current_rgb, target_rgb)
+    )
+
+    new_color = "#{:02x}{:02x}{:02x}".format(*new_rgb)
+    bodyEntry.configure(bg=new_color)
+
+    master.after(100, update_background_color)
+
+
+def predict(a):
+    state = 'neutral'
+    for sentence in a:
+        if sentence in ['잘부탁해요', '챙겨주세요', '봐주세요', '잘 좀 부탁드립니다']:
+            state = 'positive'
+            break
+        elif sentence in ['머하자는건지', '잘 좀합시다']:
+            state = 'negative'
+            break
+        else:
+            state = 'neutral'
+    # print(state)
+    # bodyEntry.tag_configure(
+    #     "colored", background=apply_background_color(state))
+    # bodyEntry.tag_add("colored", "1.0", "end")
+
+    state_var.set(state)
+    bodyEntry.tag_configure(
+        "colored", background=apply_background_color(state))
+    bodyEntry.tag_add("colored", "1.0", "end")
+
+    # 배경색 서서히 변경
+    update_background_color()
+
+
 def send():
     try:
         username = temp_username.get()
@@ -43,6 +95,7 @@ def extract_previous_sentence(event):
     text = bodyEntry.get("1.0", "end-1c")
     sentences = re.split(r'[.,?!]|\n', text)
     print(sentences)
+    predict(sentences)
 
 
 # Labels
@@ -67,6 +120,7 @@ temp_password = StringVar()
 temp_receiver = StringVar()
 temp_subject = StringVar()
 temp_body = StringVar()
+state_var = StringVar()
 
 # Entries
 usernameEntry = Entry(master, textvariable=temp_username)
@@ -77,10 +131,11 @@ receiverEntry = Entry(master, textvariable=temp_receiver)
 receiverEntry.grid(row=4, column=0)
 subjectEntry = Entry(master, textvariable=temp_subject)
 subjectEntry.grid(row=5, column=0)
-# bodyEntry = Entry(master, textvariable=temp_body)
+
 bodyEntry = Text(master, wrap=WORD, height=10, width=20)
 bodyEntry.grid(row=6, column=0)
 bodyEntry.bind("<KeyRelease>", extract_previous_sentence)
+
 
 # Buttons
 Button(master, text="Send", command=send).grid(
@@ -90,22 +145,3 @@ Button(master, text="Reset", command=reset).grid(
 
 # Mainloop
 master.mainloop()
-
-
-# import smtplib
-# import ssl
-
-# port = 465  # For SSL
-# smtp_server = "smtp.gmail.com"
-# sender_email = "hwangbird99@gmail.com"  # Enter your address
-# receiver_email = "hwangbird99@gmail.com"  # Enter receiver address
-# password = input("Type your password and press enter: ")
-# message = """\
-# Subject: Hi there
-
-# This message is sent from Python."""
-
-# context = ssl.create_default_context()
-# with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
-#     server.login(sender_email, password)
-#     server.sendmail(sender_email, receiver_email, message)
